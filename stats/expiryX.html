@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpiryX - Expiry Management System</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Icons
+        const Package = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+        );
+
+        const AlertCircle = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        );
+
+        const TrendingUp = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+            </svg>
+        );
+
+        const Bell = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+        );
+
+        const LogOut = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+        );
+
+        const Plus = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        );
+
+        const Search = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+        );
+
+        const Home = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+        );
+
+        const BarChart3 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M3 3v18h18"/>
+                <path d="M18 17V9"/>
+                <path d="M13 17V5"/>
+                <path d="M8 17v-3"/>
+            </svg>
+        );
+
+        const Users = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        );
+
+        const Clock = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        );
+
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        const App = () => {
+            const [token, setToken] = useState(localStorage.getItem('token'));
+            const [user, setUser] = useState(null);
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                if (token) {
+                    fetchUserInfo();
+                }
+            }, [token]);
+
+            const fetchUserInfo = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/auth/me`, {
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setUser(data);
+                    } else {
+                        handleLogout();
+                    }
+                } catch (err) {
+                    console.error('Error fetching user info:', err);
+                    handleLogout();
+                }
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('token');
+                setToken(null);
+                setUser(null);
+                setActiveTab('dashboard');
+            };
+
+            if (!token) {
+                return <LoginScreen setToken={setToken} />;
+            }
+
+            const isManager = user?.role === 'store_manager' || user?.role === 'super_admin';
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <header className="bg-white shadow-sm border-b border-gray-200">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Package size={32} className="text-blue-600" />
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900">ExpiryX</h1>
+                                    <p className="text-sm text-gray-500">Expiry Management System</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                    <p className="text-sm font-medium text-gray-900">{user?.full_name || user?.username}</p>
+                                    <p className="text-xs text-gray-500">{user?.role?.replace('_', ' ').toUpperCase()}</p>
+                                </div>
+                                <button onClick={handleLogout} className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                                    <LogOut size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <nav className="bg-white border-b border-gray-200">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <div className="flex gap-1">
+                                {[
+                                    { id: 'dashboard', label: 'Dashboard', icon: Home },
+                                    { id: 'batches', label: 'Batches', icon: Package },
+                                    { id: 'alerts', label: 'Alerts', icon: Bell },
+                                    { id: 'inventory', label: 'Inventory', icon: BarChart3 },
+                                    { id: 'staff', label: 'Staff Management', icon: Users, managerOnly: true },
+                                    { id: 'register', label: 'Register User', icon: Users, managerOnly: true }
+                                ].map(tab => {
+                                    if (tab.managerOnly && !isManager) return null;
+                                    const Icon = tab.icon;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                                                activeTab === tab.id
+                                                    ? 'border-blue-600 text-blue-600'
+                                                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            <Icon size={18} />
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </nav>
+
+                    <main className="max-w-7xl mx-auto px-4 py-6">
+                        {error && (
+                            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800">
+                                <AlertCircle size={20} />
+                                <span>{error}</span>
+                            </div>
+                        )}
+                        
+                        {activeTab === 'dashboard' && <Dashboard token={token} user={user} setActiveTab={setActiveTab} />}
+                        {activeTab === 'batches' && <Batches token={token} user={user} />}
+                        {activeTab === 'alerts' && <Alerts token={token} />}
+                        {activeTab === 'inventory' && <Inventory token={token} user={user} />}
+                        {activeTab === 'staff' && <StaffManagement token={token} />}
+                        {activeTab === 'register' && <RegisterUser token={token} />}
+                    </main>
+                </div>
+            );
+        };
+
+        const LoginScreen = ({ setToken }) => {
+            const [formData, setFormData] = useState({
+                username: '',
+                password: '',
+                store_id: '',
+                branch_id: ''
+            });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+
+                try {
+                    const response = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('token', data.access_token);
+                        setToken(data.access_token);
+                    } else {
+                        setError(data.detail || 'Login failed');
+                    }
+                } catch (err) {
+                    setError('Network error. Please check if the backend is running on http://localhost:8000');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                        <div className="flex items-center justify-center gap-3 mb-8">
+                            <Package size={40} className="text-blue-600" />
+                            <h1 className="text-3xl font-bold text-gray-900">ExpiryX</h1>
+                        </div>
+
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <input
+                                    type="text"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Store ID</label>
+                                <input
+                                    type="text"
+                                    value={formData.store_id}
+                                    onChange={(e) => setFormData({ ...formData, store_id: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="e.g., RELIANCE10008"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Branch ID (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={formData.branch_id}
+                                    onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="e.g., ALAPPUZHA1009"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                            >
+                                {loading ? 'Logging in...' : 'Login'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const Dashboard = ({ token, user, setActiveTab }) => {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+
+            const isManager = user?.role === 'store_manager' || user?.role === 'super_admin';
+
+            useEffect(() => {
+                fetchDashboard();
+            }, []);
+
+            useEffect(() => {
+                if (data && isManager && chartRef.current) {
+                    createChart();
+                }
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [data]);
+
+            const fetchDashboard = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/dashboard/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const dashData = await response.json();
+                    setData(dashData);
+                } catch (err) {
+                    console.error('Error fetching dashboard:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const createChart = () => {
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+
+                const ctx = chartRef.current.getContext('2d');
+                
+                // Sample data - in real app, this would come from API
+                const last30Days = Array.from({length: 30}, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (29 - i));
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: last30Days,
+                        datasets: [
+                            {
+                                label: 'Stock Cleared',
+                                data: Array.from({length: 30}, () => Math.floor(Math.random() * 10)),
+                                borderColor: 'rgb(34, 197, 94)',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Expiry Warnings',
+                                data: Array.from({length: 30}, () => Math.floor(Math.random() * 15)),
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Stock Management - Last 30 Days'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            };
+
+            if (loading) return <div className="text-center py-8">Loading dashboard...</div>;
+            if (!data) return <div className="text-center py-8">No data available</div>;
+
+            return (
+                <div className="space-y-6">
+                    {/* Manager Dashboard */}
+                    {isManager ? (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <StatCard 
+                                    title="Total Active Products" 
+                                    value={data.stats?.active_batches || 0} 
+                                    color="blue" 
+                                    icon={Package}
+                                    onClick={() => setActiveTab('batches')}
+                                    clickable
+                                />
+                                <StatCard 
+                                    title="Critical Expiry (≤3 days)" 
+                                    value={data.stats?.critical_expiry || 0} 
+                                    color="red" 
+                                    icon={AlertCircle}
+                                />
+                                <StatCard 
+                                    title="Low Stock Items" 
+                                    value={data.stats?.low_stock_items || 0} 
+                                    color="yellow" 
+                                    icon={TrendingUp}
+                                />
+                                <StatCard 
+                                    title="Stock Cleared (0)" 
+                                    value={data.expiry_breakdown?.expired || 0} 
+                                    color="green" 
+                                    icon={Package}
+                                />
+                            </div>
+
+                            {/* Trend Chart */}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <div style={{ height: '300px' }}>
+                                    <canvas ref={chartRef}></canvas>
+                                </div>
+                            </div>
+
+                            {/* Top Expiring Batches */}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-lg font-semibold mb-4">Critical: Products Expiring Soon</h2>
+                                <div className="space-y-2">
+                                    {data.top_expiring_batches?.length > 0 ? data.top_expiring_batches.map(batch => (
+                                        <div key={batch.id} className={`flex items-center justify-between p-3 rounded-lg ${
+                                            batch.days_to_expiry <= 1 ? 'bg-red-50 border border-red-200' :
+                                            batch.days_to_expiry <= 3 ? 'bg-orange-50 border border-orange-200' :
+                                            'bg-yellow-50 border border-yellow-200'
+                                        }`}>
+                                            <div>
+                                                <p className="font-medium">{batch.product_name}</p>
+                                                <p className="text-sm text-gray-600">Batch: {batch.batch_number}</p>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Added: {new Date(batch.created_at).toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`font-semibold text-lg ${
+                                                    batch.days_to_expiry <= 1 ? 'text-red-600' :
+                                                    batch.days_to_expiry <= 3 ? 'text-orange-600' : 'text-yellow-600'
+                                                }`}>
+                                                    {batch.days_to_expiry} days
+                                                </p>
+                                                <p className="text-sm text-gray-600">{batch.current_quantity} units</p>
+                                            </div>
+                                        </div>
+                                    )) : <p className="text-gray-500 text-center py-4">No critical items</p>}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        /* Staff Dashboard */
+                        <StaffDashboard token={token} data={data} />
+                    )}
+                </div>
+            );
+        };
+
+        const StaffDashboard = ({ token, data }) => {
+            const [myBatches, setMyBatches] = useState([]);
+            const [showAll, setShowAll] = useState(false);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetchMyBatches();
+            }, []);
+
+            const fetchMyBatches = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/batches/?page_size=100`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const batches = await response.json();
+                    setMyBatches(batches);
+                } catch (err) {
+                    console.error('Error:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const displayBatches = showAll ? myBatches : myBatches.slice(0, 10);
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <StatCard 
+                            title="Total Products in Branch" 
+                            value={data.stats?.total_batches || 0} 
+                            color="blue" 
+                            icon={Package}
+                        />
+                        <StatCard 
+                            title="Products I Added" 
+                            value={myBatches.length} 
+                            color="green" 
+                            icon={Plus}
+                        />
+                        <StatCard 
+                            title="Stock Cleared (0)" 
+                            value={myBatches.filter(b => b.current_quantity === 0).length} 
+                            color="red" 
+                            icon={AlertCircle}
+                        />
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-lg font-semibold mb-4">My Products</h2>
+                        <div className="space-y-2">
+                            {loading ? (
+                                <p className="text-center py-4">Loading...</p>
+                            ) : displayBatches.length > 0 ? (
+                                <>
+                                    {displayBatches.map(batch => (
+                                        <div key={batch.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div>
+                                                <p className="font-medium">{batch.product_name}</p>
+                                                <p className="text-sm text-gray-600">Batch: {batch.batch_number}</p>
+                                                <p className="text-xs text-gray-500">Added: {new Date(batch.created_at).toLocaleString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-medium">{batch.current_quantity} units</p>
+                                                <p className={`text-xs ${
+                                                    batch.days_to_expiry <= 3 ? 'text-red-600' : 'text-green-600'
+                                                }`}>
+                                                    {batch.days_to_expiry} days left
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {myBatches.length > 10 && !showAll && (
+                                        <button
+                                            onClick={() => setShowAll(true)}
+                                            className="w-full py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        >
+                                            Load More ({myBatches.length - 10} more)
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-gray-500 text-center py-4">No products added yet</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Batches = ({ token, user }) => {
+            const [batches, setBatches] = useState([]);
+            const [filteredBatches, setFilteredBatches] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [showAddModal, setShowAddModal] = useState(false);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [selectedBatch, setSelectedBatch] = useState(null);
+
+            useEffect(() => {
+                fetchBatches();
+            }, []);
+
+            useEffect(() => {
+                filterAndSortBatches();
+            }, [batches, searchTerm]);
+
+            const fetchBatches = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/batches/?page_size=100`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    setBatches(data);
+                } catch (err) {
+                    console.error('Error fetching batches:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const filterAndSortBatches = () => {
+                let filtered = batches;
+
+                // Search filter
+                if (searchTerm) {
+                    filtered = filtered.filter(batch =>
+                        batch.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        batch.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        batch.product_barcode.includes(searchTerm)
+                    );
+                }
+
+                // Sort by expiry urgency (ascending - most urgent first)
+                filtered.sort((a, b) => a.days_to_expiry - b.days_to_expiry);
+
+                setFilteredBatches(filtered);
+            };
+
+            if (loading) return <div className="text-center py-8">Loading batches...</div>;
+
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                            <input
+                                type="text"
+                                placeholder="Search by product name, batch number, or barcode..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap"
+                        >
+                            <Plus size={20} />
+                            Add Batch
+                        </button>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Product</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Batch #</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Quantity</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Expiry</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Urgency</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {filteredBatches.length > 0 ? filteredBatches.map(batch => (
+                                    <tr key={batch.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3">
+                                            <p className="font-medium">{batch.product_name}</p>
+                                            <p className="text-sm text-gray-500">{batch.product_barcode}</p>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">{batch.batch_number}</td>
+                                        <td className="px-4 py-3 text-sm">{batch.current_quantity} / {batch.initial_quantity}</td>
+                                        <td className="px-4 py-3 text-sm">{new Date(batch.expiry_date).toLocaleDateString()}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`text-sm font-semibold ${
+                                                batch.days_to_expiry <= 1 ? 'text-red-600' :
+                                                batch.days_to_expiry <= 3 ? 'text-orange-600' :
+                                                batch.days_to_expiry <= 7 ? 'text-yellow-600' : 'text-green-600'
+                                            }`}>
+                                                {batch.days_to_expiry} days
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-1 text-xs rounded-full ${
+                                                batch.is_expired ? 'bg-red-100 text-red-800' :
+                                                batch.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {batch.is_expired ? 'Expired' : batch.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => setSelectedBatch(batch)}
+                                                className="text-blue-600 hover:text-blue-800 text-sm"
+                                            >
+                                                Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )) : <tr><td colSpan="7" className="text-center py-8 text-gray-500">No batches found</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {showAddModal && <AddBatchModal token={token} onClose={() => {
+                        setShowAddModal(false);
+                        fetchBatches();
+                    }} />}
+
+                    {selectedBatch && <BatchDetailModal batch={selectedBatch} onClose={() => setSelectedBatch(null)} />}
+                </div>
+            );
+        };
+
+        const BatchDetailModal = ({ batch, onClose }) => {
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4">Batch Details</h3>
+                        
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm text-gray-600">Product Name</p>
+                                <p className="font-medium">{batch.product_name}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Batch Number</p>
+                                <p className="font-medium">{batch.batch_number}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Barcode</p>
+                                <p className="font-medium">{batch.product_barcode}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Clock size={16} className="text-gray-400" />
+                                <div>
+                                    <p className="text-sm text-gray-600">Added On</p>
+                                    <p className="font-medium">{new Date(batch.created_at).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Added By</p>
+                                <p className="font-medium">Staff ID: {batch.created_by}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm text-gray-600">Quantity</p>
+                                    <p className="font-medium">{batch.current_quantity} / {batch.initial_quantity}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600">Days to Expiry</p>
+                                    <p className={`font-medium ${
+                                        batch.days_to_expiry <= 3 ? 'text-red-600' : 'text-green-600'
+                                    }`}>{batch.days_to_expiry} days</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={onClose}
+                            className="mt-6 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const AddBatchModal = ({ token, onClose }) => {
+            const [formData, setFormData] = useState({
+                batch_number: '',
+                barcode: '',
+                product_name: '',
+                initial_quantity: '',
+                expiry_date: '',
+                manufacture_date: '',
+                cost_price: '',
+                selling_price: ''
+            });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+
+                try {
+                    const response = await fetch(`${API_BASE}/batches/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            ...formData,
+                            initial_quantity: parseInt(formData.initial_quantity),
+                            cost_price: parseFloat(formData.cost_price) || null,
+                            selling_price: parseFloat(formData.selling_price) || null
+                        })
+                    });
+
+                    if (response.ok) {
+                        onClose();
+                    } else {
+                        const data = await response.json();
+                        setError(data.detail || 'Failed to create batch');
+                    }
+                } catch (err) {
+                    setError('Network error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-xl font-bold mb-4">Add New Batch</h3>
+                        
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Batch Number *</label>
+                                <input
+                                    type="text"
+                                    value={formData.batch_number}
+                                    onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Barcode *</label>
+                                <input
+                                    type="text"
+                                    value={formData.barcode}
+                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Product Name *</label>
+                                <input
+                                    type="text"
+                                    value={formData.product_name}
+                                    onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Initial Quantity *</label>
+                                <input
+                                    type="number"
+                                    value={formData.initial_quantity}
+                                    onChange={(e) => setFormData({ ...formData, initial_quantity: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Expiry Date *</label>
+                                <input
+                                    type="date"
+                                    value={formData.expiry_date}
+                                    onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Manufacture Date</label>
+                                <input
+                                    type="date"
+                                    value={formData.manufacture_date}
+                                    onChange={(e) => setFormData({ ...formData, manufacture_date: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Cost Price</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.cost_price}
+                                        onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Selling Price</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.selling_price}
+                                        onChange={(e) => setFormData({ ...formData, selling_price: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                                >
+                                    {loading ? 'Creating...' : 'Create Batch'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const Alerts = ({ token }) => {
+            const [alerts, setAlerts] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetchAlerts();
+            }, []);
+
+            const fetchAlerts = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/alerts/?limit=100`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    setAlerts(data);
+                } catch (err) {
+                    console.error('Error fetching alerts:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const acknowledgeAlert = async (alertId) => {
+                try {
+                    await fetch(`${API_BASE}/alerts/acknowledge`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ alert_ids: [alertId] })
+                    });
+                    fetchAlerts();
+                } catch (err) {
+                    console.error('Error acknowledging alert:', err);
+                }
+            };
+
+            if (loading) return <div className="text-center py-8">Loading alerts...</div>;
+
+            // Group alerts by urgency
+            const criticalAlerts = alerts.filter(a => a.days_to_expiry <= 1);
+            const warningAlerts = alerts.filter(a => a.days_to_expiry > 1 && a.days_to_expiry <= 3);
+            const infoAlerts = alerts.filter(a => a.days_to_expiry > 3);
+
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold">Alerts & Notifications</h2>
+
+                    {/* Critical Alerts */}
+                    {criticalAlerts.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-red-600 mb-3">🚨 Critical Alerts (Expires in 1 day)</h3>
+                            <div className="space-y-3">
+                                {criticalAlerts.map(alert => (
+                                    <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Warning Alerts */}
+                    {warningAlerts.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-orange-600 mb-3">⚠️ Warning Alerts (Expires in 2-3 days)</h3>
+                            <div className="space-y-3">
+                                {warningAlerts.map(alert => (
+                                    <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info Alerts */}
+                    {infoAlerts.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-blue-600 mb-3">ℹ️ Information Alerts</h3>
+                            <div className="space-y-3">
+                                {infoAlerts.map(alert => (
+                                    <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {alerts.length === 0 && (
+                        <p className="text-gray-500 text-center py-8">No alerts at this time</p>
+                    )}
+                </div>
+            );
+        };
+
+        const AlertCard = ({ alert, onAcknowledge }) => {
+            return (
+                <div
+                    className={`p-4 rounded-lg border-l-4 ${
+                        alert.days_to_expiry <= 1 ? 'bg-red-50 border-red-500' :
+                        alert.days_to_expiry <= 3 ? 'bg-orange-50 border-orange-500' :
+                        'bg-blue-50 border-blue-500'
+                    }`}
+                >
+                    <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <AlertCircle size={18} className={
+                                    alert.days_to_expiry <= 1 ? 'text-red-600' :
+                                    alert.days_to_expiry <= 3 ? 'text-orange-600' : 'text-blue-600'
+                                } />
+                                <span className={`text-xs font-semibold uppercase ${
+                                    alert.days_to_expiry <= 1 ? 'text-red-600' :
+                                    alert.days_to_expiry <= 3 ? 'text-orange-600' : 'text-blue-600'
+                                }`}>
+                                    {alert.alert_level}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {new Date(alert.created_at).toLocaleString()}
+                                </span>
+                            </div>
+                            <p className="font-medium text-gray-900 mb-1">{alert.product_name}</p>
+                            <p className="text-sm text-gray-600">{alert.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">Batch: {alert.batch_number}</p>
+                        </div>
+                        {alert.status === 'pending' && (
+                            <button
+                                onClick={() => onAcknowledge(alert.id)}
+                                className="ml-4 px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                            >
+                                Acknowledge
+                            </button>
+                        )}
+                        {alert.status === 'acknowledged' && (
+                            <span className="ml-4 px-3 py-1 text-sm text-green-600 bg-green-50 rounded">
+                                ✓ Acknowledged
+                            </span>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const Inventory = ({ token, user }) => {
+            const [summary, setSummary] = useState(null);
+            const [stockLevels, setStockLevels] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                fetchInventory();
+            }, []);
+
+            const fetchInventory = async () => {
+                try {
+                    const [summaryRes, stockRes] = await Promise.all([
+                        fetch(`${API_BASE}/inventory/summary`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }),
+                        fetch(`${API_BASE}/inventory/stock-levels`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                    ]);
+                    const summaryData = await summaryRes.json();
+                    const stockData = await stockRes.json();
+                    setSummary(summaryData);
+                    setStockLevels(stockData);
+                } catch (err) {
+                    console.error('Error fetching inventory:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            if (loading) return <div className="text-center py-8">Loading inventory...</div>;
+            if (!summary) return <div className="text-center py-8">No data available</div>;
+
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold">Inventory Management</h2>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <p className="text-sm text-gray-600 mb-1">Total Inventory Value</p>
+                            <p className="text-3xl font-bold text-blue-600">
+                                ₹{summary.total_inventory_value?.toFixed(2) || 0}
+                            </p>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <p className="text-sm text-gray-600 mb-1">Total Units in Stock</p>
+                            <p className="text-3xl font-bold text-green-600">{summary.total_units || 0}</p>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <p className="text-sm text-gray-600 mb-1">Unique Products</p>
+                            <p className="text-3xl font-bold text-purple-600">{summary.unique_products || 0}</p>
+                        </div>
+                    </div>
+
+                    {/* Expiry Status */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold mb-4">Expiry Status Overview</h3>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                <p className="text-2xl font-bold text-gray-800">
+                                    {summary.expiring_batches?.total || 0}
+                                </p>
+                                <p className="text-sm text-gray-600">Total Active</p>
+                            </div>
+                            <div className="text-center p-4 bg-orange-50 rounded-lg">
+                                <p className="text-2xl font-bold text-orange-600">
+                                    {summary.expiring_batches?.critical || 0}
+                                </p>
+                                <p className="text-sm text-gray-600">Critical (≤1 day)</p>
+                            </div>
+                            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                                <p className="text-2xl font-bold text-yellow-600">
+                                    {summary.expiring_batches?.warning || 0}
+                                </p>
+                                <p className="text-sm text-gray-600">Warning (2-5 days)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stock Levels by Product */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold mb-4">Stock Levels by Product</h3>
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {stockLevels.length > 0 ? stockLevels.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                                    <div>
+                                        <p className="font-medium">{item.product_name}</p>
+                                        <p className="text-sm text-gray-600">
+                                            {item.category} • {item.batch_count} batch{item.batch_count !== 1 ? 'es' : ''}
+                                        </p>
+                                        <p className="text-xs text-gray-500">Barcode: {item.barcode}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`text-lg font-semibold ${
+                                            item.total_quantity === 0 ? 'text-red-600' :
+                                            item.total_quantity <= 10 ? 'text-orange-600' : 'text-green-600'
+                                        }`}>
+                                            {item.total_quantity} units
+                                        </p>
+                                        {item.days_to_earliest_expiry !== null && (
+                                            <p className="text-xs text-gray-600">
+                                                Expires in {item.days_to_earliest_expiry} days
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )) : <p className="text-gray-500 text-center py-4">No stock data available</p>}
+                        </div>
+                    </div>
+
+                    {/* Top Products by Value */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold mb-4">Top Products by Value</h3>
+                        <div className="space-y-2">
+                            {summary.top_products_by_value?.length > 0 ? summary.top_products_by_value.map((product, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                                            #{idx + 1}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{product.product_name}</p>
+                                            <p className="text-sm text-gray-600">Barcode: {product.barcode}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold text-blue-600">
+                                            ₹{product.total_value?.toFixed(2) || 0}
+                                        </p>
+                                        <p className="text-sm text-gray-600">{product.total_quantity} units</p>
+                                    </div>
+                                </div>
+                            )) : <p className="text-gray-500 text-center py-4">No products found</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StaffManagement = ({ token }) => {
+            const [staff, setStaff] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedStaff, setSelectedStaff] = useState(null);
+
+            useEffect(() => {
+                fetchStaff();
+            }, []);
+
+            const fetchStaff = async () => {
+                try {
+                    // This would need a new backend endpoint to list users
+                    // For now, using placeholder data
+                    setStaff([]);
+                } catch (err) {
+                    console.error('Error fetching staff:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            if (loading) return <div className="text-center py-8">Loading staff...</div>;
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold">Staff Management</h2>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="p-6">
+                            <h3 className="text-lg font-semibold mb-4">Registered Staff Members</h3>
+                            
+                            {staff.length > 0 ? (
+                                <div className="space-y-2">
+                                    {staff.map((member) => (
+                                        <div 
+                                            key={member.id}
+                                            onClick={() => setSelectedStaff(member)}
+                                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                    <Users size={20} className="text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium">{member.full_name}</p>
+                                                    <p className="text-sm text-gray-600">{member.username}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-medium text-gray-900">{member.role}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    Last login: {member.last_login ? new Date(member.last_login).toLocaleDateString() : 'Never'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <Users size={48} className="mx-auto text-gray-300 mb-4" />
+                                    <p className="text-gray-500">No staff members found</p>
+                                    <p className="text-sm text-gray-400 mt-2">
+                                        Staff members will appear here once registered
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {selectedStaff && (
+                        <StaffDetailModal staff={selectedStaff} onClose={() => setSelectedStaff(null)} />
+                    )}
+                </div>
+            );
+        };
+
+        const StaffDetailModal = ({ staff, onClose }) => {
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4">Staff Details</h3>
+                        
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm text-gray-600">Full Name</p>
+                                <p className="font-medium">{staff.full_name}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Username</p>
+                                <p className="font-medium">{staff.username}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Email</p>
+                                <p className="font-medium">{staff.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Role</p>
+                                <p className="font-medium capitalize">{staff.role?.replace('_', ' ')}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Status</p>
+                                <p className={`font-medium ${staff.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                                    {staff.is_active ? 'Active' : 'Inactive'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Last Login</p>
+                                <p className="font-medium">
+                                    {staff.last_login ? new Date(staff.last_login).toLocaleString() : 'Never'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={onClose}
+                            className="mt-6 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const RegisterUser = ({ token }) => {
+            const [formData, setFormData] = useState({
+                username: '',
+                email: '',
+                full_name: '',
+                password: '',
+                role: 'staff',
+                store_id: '',
+                branch_id: ''
+            });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                setSuccess('');
+
+                try {
+                    const response = await fetch(`${API_BASE}/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        setSuccess(`User ${data.username} registered successfully!`);
+                        setFormData({
+                            username: '',
+                            email: '',
+                            full_name: '',
+                            password: '',
+                            role: 'staff',
+                            store_id: '',
+                            branch_id: ''
+                        });
+                    } else {
+                        setError(data.detail || 'Registration failed');
+                    }
+                } catch (err) {
+                    setError('Network error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-bold mb-6">Register New User</h2>
+
+                    <div className="bg-white rounded-lg shadow p-6">
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+                                {success}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Username *</label>
+                                <input
+                                    type="text"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Email *</label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Full Name *</label>
+                                <input
+                                    type="text"
+                                    value={formData.full_name}
+                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Password *</label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    minLength={8}
+                                    required
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Role *</label>
+                                <select
+                                    value={formData.role}
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required
+                                >
+                                    <option value="staff">Staff</option>
+                                    <option value="store_manager">Store Manager</option>
+                                    <option value="super_admin">Super Admin</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Store ID *</label>
+                                <input
+                                    type="text"
+                                    value={formData.store_id}
+                                    onChange={(e) => setFormData({ ...formData, store_id: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., RELIANCE10008"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Branch ID (Required for Staff)</label>
+                                <input
+                                    type="text"
+                                    value={formData.branch_id}
+                                    onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., ALAPPUZHA1009"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                            >
+                                {loading ? 'Registering...' : 'Register User'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const StatCard = ({ title, value, color, icon: Icon, onClick, clickable }) => {
+            const colors = {
+                blue: 'bg-blue-50 text-blue-600',
+                green: 'bg-green-50 text-green-600',
+                yellow: 'bg-yellow-50 text-yellow-600',
+                red: 'bg-red-50 text-red-600'
+            };
+
+            return (
+                <div 
+                    className={`bg-white rounded-lg shadow p-6 ${clickable ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+                    onClick={clickable ? onClick : undefined}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-gray-600">{title}</p>
+                        <div className={`p-2 rounded-lg ${colors[color]}`}>
+                            <Icon size={20} />
+                        </div>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-900">{value}</p>
+                    {clickable && <p className="text-xs text-blue-600 mt-2">Click to view details →</p>}
+                </div>
+            );
+        };
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
